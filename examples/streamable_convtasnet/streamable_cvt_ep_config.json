@@ -1,0 +1,9 @@
+{
+    "backend_type": "htp",
+    "htp_arch": "73",
+    "htp_performance_mode": "burst", //controls the HTP clock and voltage behavior
+    "rpc_control_latency": "10",
+    "htp_graph_finalization_optimization_mode": "3",
+    "qnn_context_priority": "high",
+    "enable_htp_shared_memory_allocator": "1" // might fail -> needs libcdsprpc.so
+}

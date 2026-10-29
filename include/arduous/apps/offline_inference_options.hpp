@@ -1,0 +1,33 @@
+#pragma once
+
+#define MODEL_FILENAME_KEY      "m"
+#define MODEL_FILENAME_KEY_LONG "model_filename"
+#define MODEL_FILENAME_KEY_FULL (MODEL_FILENAME_KEY "," MODEL_FILENAME_KEY_LONG)
+
+#define MODEL_TYPE_KEY      "t"
+#define MODEL_TYPE_KEY_LONG "model_type"
+#define MODEL_TYPE_KEY_FULL (MODEL_TYPE_KEY "," MODEL_TYPE_KEY_LONG)
+
+#define EP_NAME_KEY      "e"
+#define EP_NAME_KEY_LONG "ep_name"
+#define EP_NAME_KEY_FULL (EP_NAME_KEY "," EP_NAME_KEY_LONG)
+
+#define EP_CONFIG_KEY      "c"
+#define EP_CONFIG_KEY_LONG "ep_config"
+#define EP_CONFIG_KEY_FULL (EP_CONFIG_KEY "," EP_CONFIG_KEY_LONG)
+
+#define SESSION_CONFIG_KEY      "s"
+#define SESSION_CONFIG_KEY_LONG "session_config"
+#define SESSION_CONFIG_KEY_FULL (SESSION_CONFIG_KEY "," SESSION_CONFIG_KEY_LONG)
+
+#define INPUT_KEY      "i"
+#define INPUT_KEY_LONG "input"
+#define INPUT_KEY_FULL (INPUT_KEY "," INPUT_KEY_LONG)
+
+#define OUTPUT_KEY      "o"
+#define OUTPUT_KEY_LONG "output"
+#define OUTPUT_KEY_FULL (OUTPUT_KEY "," OUTPUT_KEY_LONG)
+
+#define MODEL_CONFIG_KEY      "C"
+#define MODEL_CONFIG_KEY_LONG "model_config"
+#define MODEL_CONFIG_KEY_FULL (MODEL_CONFIG_KEY "," MODEL_CONFIG_KEY_LONG)
