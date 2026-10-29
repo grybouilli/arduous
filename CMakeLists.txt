@@ -16,5 +16,5 @@ include(cmake/Fetch_cxxopts.cmake)
 include(cmake/Fetch_sndfile_wrapper.cmake)
 include(cmake/App_factory.cmake)
 
-create_new_app(offline_inferences OfflineInferenceApp offline_inferences_app)
-create_new_app(get_embedded_ctx GetEmbeddedCtxModelApp get_embedded_ctx_model_app)
+arduous_create_new_app(offline_inferences OfflineInferenceApp offline_inferences_app)
+arduous_create_new_app(get_embedded_ctx GetEmbeddedCtxModelApp get_embedded_ctx_model_app)

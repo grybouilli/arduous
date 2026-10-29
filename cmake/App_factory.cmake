@@ -1,4 +1,4 @@
-function(create_new_app app_name app_class_name app_base_file)
+function(arduous_create_new_app app_name app_class_name app_base_file)
     set(${app_name}_BIN ${app_name})
     add_executable(${${app_name}_BIN}
         ${CMAKE_SOURCE_DIR}/src/apps/generic_main_app.cpp
