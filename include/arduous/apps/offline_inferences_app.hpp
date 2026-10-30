@@ -35,11 +35,11 @@ class OfflineInferenceApp : public AppBase {
     void load_model_config(const std::string model_type, const std::string path_to_config);
 
     void save_audio_output(const arduous::ArduousOutputView& output);
+    void save_latencies_to_npy(std::span<const int64_t> latencies);
 
    private:
     std::unique_ptr<arduous::ModelBase> _model;
     arduous::ModelIOConfig              _model_io_config;
     std::string                         _input_audio_path;
     std::string                         _output_audio_path;
-    std::string                         _output_latencies_path;
 };

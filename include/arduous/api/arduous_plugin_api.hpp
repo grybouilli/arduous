@@ -87,20 +87,20 @@ class ModelBase {
      * @param output Reference to the output view where results will be written.
      * @return The amount of samples written in output
      */
-    [[nodiscard]] int process(const ArduousInputView& in, ArduousOutputView& out) { return do_process(in, out); }
+    int process(const ArduousInputView& in, ArduousOutputView& out) { return do_process(in, out); }
     /**
      * @brief Processes raw audio data directly from a span.
      * @param audio The audio data as a contiguous memory span.
      * @return The amount of samples written in output
      */
-    [[nodiscard]] int process(std::span<float> audio) { return do_process(audio); }
+    int process(std::span<float> audio) { return do_process(audio); }
     /**
      * @brief Processes raw pointer and sample count for audio data.
      * @param audio Pointer to the audio data.
      * @param samples The number of audio samples.
      * @return The amount of samples written in output
      */
-    [[nodiscard]] int process(float* audio, std::size_t n) { return do_process(std::span<float>{audio, n}); }
+    int process(float* audio, std::size_t n) { return do_process(std::span<float>{audio, n}); }
 
    protected:
     /**

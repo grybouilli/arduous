@@ -2,6 +2,8 @@
 #include <arduous/api/arduous_plugin_api.hpp>
 #include <arduous/apps/offline_inferences_app.hpp>
 #include <arduous/utils/json_utils.hpp>
+#include <arduous/utils/npy.hpp>
+#include <arduous/utils/time_utils.hpp>
 #include <filesystem>
 #include <format>
 #include <magic_enum/magic_enum.hpp>
@@ -42,15 +44,17 @@ void OfflineInferenceApp::run() {
 
     // run inferences
     // mesure latencies
-    int frame_count = 0;
+    std::vector<int64_t> latencies;
+    int                  frame_count = 0;
     while ((model_in_buffer.frames = input_audio.read(in_buffer.data(), _model_io_config.audio_in.length)) > 0) {
         frame_count++;
         if (model_in_buffer.frames < _model_io_config.audio_in.length) {
             std::fill(in_buffer.begin() + model_in_buffer.frames, in_buffer.end(), 0.0f);
             model_in_buffer.frames = _model_io_config.audio_in.length;
         }
+        auto beg = tic();
         _model->process(model_in_buffer, model_out_buffer);
-
+        latencies.push_back(toc(beg));
         // make the buffer point to the next available frame
         model_out_buffer.data += model_out_buffer.layout == arduous::ChannelLayout::Planar
                                      ? model_out_buffer.frames_written / model_out_buffer.channels
@@ -61,6 +65,7 @@ void OfflineInferenceApp::run() {
     model_out_buffer.data           = output.data();  // point back to the beginning
     model_out_buffer.frames_written = output.size();
     save_audio_output(model_out_buffer);
+    save_latencies_to_npy(latencies);
     // save latencies
 }
 
@@ -77,6 +82,16 @@ void OfflineInferenceApp::save_audio_output(const arduous::ArduousOutputView& ou
         SoundFileWriter<float, SF_FORMAT_WAV> writer{filename.c_str(), (int)output.sample_rate, (int)output.channels};
         writer.write(output.data, output.frames_written);
     }
+}
+
+void OfflineInferenceApp::save_latencies_to_npy(std::span<const int64_t> latencies) {
+    npy::npy_data<float> latencies_npy;
+    latencies_npy.data.assign(latencies.begin(), latencies.end());
+    latencies_npy.shape = {latencies.size()};
+
+    const std::string path{std::format("{}/latencies.npy", _output_audio_path)};
+    std::cout << "Writing latencies to " << path << std::endl;
+    npy::write_npy(path, latencies_npy);
 }
 
 void OfflineInferenceApp::load_model_config(const std::string model_type, const std::string path_to_config) {
