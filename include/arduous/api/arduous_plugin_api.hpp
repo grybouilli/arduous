@@ -191,7 +191,9 @@ class Factory {
          * @param name The name under which the implementation will be registered.
          */
         explicit Register(const std::string& name) {
-            map()[name] = [] { return std::unique_ptr<ModelBase>(std::make_unique<T>()); };
+            map()[name] = [](Ort::Session& session, const ModelIOConfig io_config) {
+                return std::unique_ptr<ModelBase>(std::make_unique<T>(session, io_config));
+            };
         }
     };
 

@@ -14,7 +14,7 @@ class StreamableConvtasnet : public ModelBaseWithCPUMemory {
         _output{_memory_info, {1, io_config.audio_out.channels, io_config.audio_out.length}},
         _input_head_buffer{_memory_info, {1, 1, 32}},
         _tcn_states{_memory_info, {1, 512, 180}},
-        _tail_buffer{_memory_info, {2, 1, 32}} {}
+        _tail_buffer{_memory_info, {1, 2, 32}} {}
 
    protected:
     int do_process(const ArduousInputView& input, ArduousOutputView& output) final {
@@ -32,9 +32,9 @@ class StreamableConvtasnet : public ModelBaseWithCPUMemory {
         _binding.BindInput("tcn_states", _tcn_states.tensor);
         _binding.BindInput("tail_states", _tail_buffer.tensor);
         _binding.BindOutput("y", _output.tensor);
-        _binding.BindOutput("audio_states", next_head_buffer.tensor);
-        _binding.BindOutput("tcn_states", next_tcn_states.tensor);
-        _binding.BindOutput("tail_states", next_tail_buffer.tensor);
+        _binding.BindOutput("next_audio_states", next_head_buffer.tensor);
+        _binding.BindOutput("next_tcn_states", next_tcn_states.tensor);
+        _binding.BindOutput("next_tail_states", next_tail_buffer.tensor);
 
         _session.Run(Ort::RunOptions{nullptr}, _binding);
 
@@ -58,5 +58,4 @@ class StreamableConvtasnet : public ModelBaseWithCPUMemory {
     ort_tensor_buffer<float, 3> _output;
 };
 
-static Factory::Register<StreamableConvtasnet> stream_convtasnet_reg("StreamableConvtasnet");
 }  // namespace arduous

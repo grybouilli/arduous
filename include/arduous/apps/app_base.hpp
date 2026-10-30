@@ -35,7 +35,7 @@ class AppBase {
         adder(EP_CONFIG_KEY_FULL, "File containing the EP config (expected .json file)", cxxopts::value<std::string>());
         adder(SESSION_CONFIG_KEY_FULL,
               "File containing the session config entries (expected .json file)",
-              cxxopts::value<std::string>());
+              cxxopts::value<std::string>()->default_value(""));
         return options;
     }
 

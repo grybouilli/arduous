@@ -1,12 +1,13 @@
 #ifndef APP_CLASS_HEADER
 #error "You need to specify your App class prototype file in APP_CLASS_HEADER"
-#endif // !APP_CLASS_HEADER
+#endif  // !APP_CLASS_HEADER
 
 #ifndef APP_CLASS_NAME
 #error "You need to specify your App class name in APP_CLASS_NAME"
 #endif  // !APP_CLASS_NAME
 
 #include APP_CLASS_HEADER
+#include <arduous/models/models_registry.hpp>
 #include <cxxopts.hpp>
 #include <iostream>
 

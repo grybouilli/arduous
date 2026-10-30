@@ -42,7 +42,13 @@ void OfflineInferenceApp::run() {
 
     // run inferences
     // mesure latencies
+    int frame_count = 0;
     while ((model_in_buffer.frames = input_audio.read(in_buffer.data(), _model_io_config.audio_in.length)) > 0) {
+        frame_count++;
+        if (model_in_buffer.frames < _model_io_config.audio_in.length) {
+            std::fill(in_buffer.begin() + model_in_buffer.frames, in_buffer.end(), 0.0f);
+            model_in_buffer.frames = _model_io_config.audio_in.length;
+        }
         model_out_buffer.frames_written = _model->process(model_in_buffer, model_out_buffer);
 
         // make the buffer point to the next available frame
@@ -50,8 +56,10 @@ void OfflineInferenceApp::run() {
                                      ? model_out_buffer.frames_written / model_out_buffer.channels
                                      : model_out_buffer.frames_written;
     }
+    std::cout << std::format("Treated {} frames of length {}\n", frame_count, _model_io_config.audio_in.length);
     // save audio output(s)
-    model_out_buffer.data = output.data();  // point back to the beginning
+    model_out_buffer.data           = output.data();  // point back to the beginning
+    model_out_buffer.frames_written = output.size();
     save_audio_output(model_out_buffer);
     // save latencies
 }
