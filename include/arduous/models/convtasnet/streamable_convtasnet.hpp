@@ -47,6 +47,7 @@ class StreamableConvtasnet : public ModelBaseWithCPUMemory {
                     _output.buffer_memory.data() + output_chunk_length,
                     output_chunk_length * sizeof(float));
 
+        output.frames_written = _output.buffer_memory.size(); 
         return _output.buffer_memory.size();
     }
 

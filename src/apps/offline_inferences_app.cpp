@@ -49,7 +49,7 @@ void OfflineInferenceApp::run() {
             std::fill(in_buffer.begin() + model_in_buffer.frames, in_buffer.end(), 0.0f);
             model_in_buffer.frames = _model_io_config.audio_in.length;
         }
-        model_out_buffer.frames_written = _model->process(model_in_buffer, model_out_buffer);
+        _model->process(model_in_buffer, model_out_buffer);
 
         // make the buffer point to the next available frame
         model_out_buffer.data += model_out_buffer.layout == arduous::ChannelLayout::Planar
