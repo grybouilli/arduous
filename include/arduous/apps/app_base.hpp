@@ -1,6 +1,6 @@
 #pragma once
 
-#include <arduous/apps/offline_inference_options.hpp>
+#include <arduous/apps/apps_options.hpp>
 #include <arduous/utils/json_utils.hpp>
 #include <cxxopts.hpp>
 #include <ort_utils/ort_session_handler.hpp>
@@ -33,10 +33,39 @@ class AppBase {
               cxxopts::value<std::string>());
         adder(EP_NAME_KEY_FULL, "ONNX Runtime EP name (expected string)", cxxopts::value<std::string>());
         adder(EP_CONFIG_KEY_FULL, "File containing the EP config (expected .json file)", cxxopts::value<std::string>());
+        adder(ARGS_FROM_FILE_KEY_FULL,
+              "File containing argument values for the app (expected .json file)",
+              cxxopts::value<std::string>());
         adder(SESSION_CONFIG_KEY_FULL,
               "File containing the session config entries (expected .json file)",
               cxxopts::value<std::string>()->default_value(""));
         return options;
+    }
+
+    static std::pair<size_t, std::vector<std::string>> get_options_from_config_file(cxxopts::ParseResult& args) {
+        // load json file
+        // loop through expected arguments of args
+        // fill in those that are provided by json file
+        auto                     args_from_file = json_from_filename(args[ARGS_FROM_FILE_KEY].as<std::string>());
+        std::vector<std::string> new_command_line;
+        size_t                   new_argc = 0;
+        for (const auto [key, value] : args_from_file.items()) {
+            const std::string v = value.get<std::string>();
+            if (std::find_if(args.arguments().begin(), args.arguments().end(), [key](const auto& kv) {
+                    return kv.key() == key;
+                }) == args.arguments().end()) {
+                new_command_line.push_back(std::format("--{}", key));
+                new_command_line.push_back(std::format("{}", v));
+                new_argc += 2;
+            }
+        }
+        for (const auto& elem : args.arguments()) {
+            new_command_line.push_back(std::format("--{}", elem.key()));
+            new_command_line.push_back(std::format("{}", elem.value()));
+            new_argc += 2;
+        }
+
+        return std::make_pair(new_argc, new_command_line);
     }
 
     virtual void run() = 0;

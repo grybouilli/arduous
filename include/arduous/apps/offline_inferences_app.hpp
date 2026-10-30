@@ -2,7 +2,7 @@
 
 #include <arduous/api/arduous_plugin_api.hpp>
 #include <arduous/apps/app_base.hpp>
-#include <arduous/apps/offline_inference_options.hpp>
+#include <arduous/apps/apps_options.hpp>
 #include <cxxopts.hpp>
 #include <nlohmann/json.hpp>
 #include <ort_utils/ort_utils.hpp>
