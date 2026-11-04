@@ -204,7 +204,10 @@ class Factory {
      */
     static Creator create(const std::string& name) {
         auto it = map().find(name);
-        return it == map().end() ? nullptr : it->second;
+        if(it == map().end()){
+            throw std::runtime_error(std::format("Factory::{}: trying to create a model of type {} but it hasn't been registered in the Factory.", __FUNCTION__, name));
+        }
+        return it->second;
     }
 };
 
