@@ -47,7 +47,6 @@ void OfflineInferenceApp::run() {
     std::vector<int64_t> latencies;
     int                  frame_count = 0;
     while ((model_in_buffer.frames = input_audio.read(in_buffer.data(), _model_io_config.audio_in.length)) > 0) {
-        frame_count++;
         if (model_in_buffer.frames < _model_io_config.audio_in.length) {
             std::fill(in_buffer.begin() + model_in_buffer.frames, in_buffer.end(), 0.0f);
             model_in_buffer.frames = _model_io_config.audio_in.length;
@@ -55,10 +54,12 @@ void OfflineInferenceApp::run() {
         auto beg = tic();
         _model->process(model_in_buffer, model_out_buffer);
         latencies.push_back(toc(beg));
+        postprocess(model_out_buffer, frame_count, output.size());
         // make the buffer point to the next available frame
         model_out_buffer.data += model_out_buffer.layout == arduous::ChannelLayout::Planar
                                      ? model_out_buffer.frames_written / model_out_buffer.channels
                                      : model_out_buffer.frames_written;
+        frame_count++;
     }
     std::cout << std::format("Treated {} frames of length {}\n", frame_count, _model_io_config.audio_in.length);
     // save audio output(s)
@@ -67,6 +68,24 @@ void OfflineInferenceApp::run() {
     save_audio_output(model_out_buffer);
     save_latencies_to_npy(latencies);
     // save latencies
+}
+
+void OfflineInferenceApp::postprocess(arduous::ArduousOutputView& output,
+                                      const size_t                current_frame_idx,
+                                      const size_t                expected_final_output_size) {
+    // if the output layout is planar, we move the channels to their corresponding location:
+    // [chan0_buf0, chan1_buf0, ..., chanm_buf0, chan0_buf1, ..., chanm_bufn] -> [chan0_buf0, chan0_buf1, ...,
+    // chan0_bufn, chan1_buf0, ..., chanm_bufn]
+    if (output.layout == arduous::ChannelLayout::Planar) {
+        const size_t channel_size = output.frames_written / output.channels;
+        const size_t expected_final_channel_size = expected_final_output_size / output.channels;
+
+        for (auto channel = 1; channel < output.channels; ++channel) {
+            std::memcpy(output.data + channel * expected_final_channel_size,
+                        output.data + channel * channel_size,
+                        channel_size*sizeof(float));
+        }
+    }
 }
 
 void OfflineInferenceApp::save_audio_output(const arduous::ArduousOutputView& output) {
