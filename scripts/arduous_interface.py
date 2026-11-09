@@ -19,6 +19,12 @@ class ArduousInterface:
         self.path_to_output = os.path.join(self.root, "audios/bench/output/")
         self.setup_script = os.path.join(self.root, "setup.sh")
 
+    def create_home(self, qairt_version=2.52):
+        self._adb("shell", f"mkdir -p {self.root}")
+        self._adb("shell", f"mkdir -p {self.root}/lib")
+        self.qairt_home = f"{self.root}/lib/qairt{qairt_version}"
+        return self._adb("shell", f"mkdir -p {self.qairt_home}")
+
     def _adb_shell_env(self, *args: str) -> subprocess.CompletedProcess:
         """Run a command on the device after sourcing setup.sh, in the same shell."""
         command = f"cd {self.root} && source {shlex.quote(self.setup_script)} && {shlex.join(args)}"
