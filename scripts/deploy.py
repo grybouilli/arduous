@@ -12,7 +12,9 @@ import os
 parser = ArgumentParser()
 parser.add_argument("--android_ndk", type=str, default="/opt/android-ndk-r29")
 parser.add_argument("--qnn", action=BooleanOptionalAction, default=True)
+parser.add_argument("--qnn_ep_plugin", action=BooleanOptionalAction, default=True)
 parser.add_argument("--ninja", action=BooleanOptionalAction, default=True)
+parser.add_argument("--fresh", action=BooleanOptionalAction, default=False)
 parser.add_argument("--android_abi", type=str, default="arm64-v8a")
 parser.add_argument("--build_dir", type=str, default="build")
 parser.add_argument("--arduous_home", type=str, default="arduous")
@@ -28,19 +30,25 @@ args = parser.parse_args()
 ############################################
 ## Generate CMake
 ############################################
-generate_cmd_args = []
-if args.qnn:
-    generate_cmd_args.append("-DONNX_USE_QNN=ON")
-if args.ninja:
-    generate_cmd_args.append("-GNinja")
-    generate_cmd_args.append("-DCMAKE_CXX_FLAGS=\"-fdiagnostics-color=always\"")
-generate_cmd_args.append(f"-B {args.build_dir}")
-generate_cmd_args.append(f"-DANDROID_ABI={args.android_abi}")
-generate_cmd_args.append(
-    f"-DCMAKE_TOOLCHAIN_FILE={args.android_ndk}/build/cmake/android.toolchain.cmake"
-)
+if not os.path.exists(args.build_dir) or args.fresh:
+    generate_cmd_args = []
+    if args.qnn:
+        generate_cmd_args.append("-DONNX_USE_QNN=ON")
+    if args.qnn_ep_plugin:
+        generate_cmd_args.append("-DORT_UTILS_USE_QNN_EP_PLUGIN=ON")
+        generate_cmd_args.append(
+            f"-DORT_UTILS_QNN_EP_PLUGIN_PATH={args.arduous_home}/lib/libonnxruntime_providers_qnn.so"
+        )
+    if args.ninja:
+        generate_cmd_args.append("-GNinja")
+        generate_cmd_args.append("-DCMAKE_CXX_FLAGS=\"-fdiagnostics-color=always\"")
+    generate_cmd_args.append(f"-B {args.build_dir}")
+    generate_cmd_args.append(f"-DANDROID_ABI={args.android_abi}")
+    generate_cmd_args.append(
+        f"-DCMAKE_TOOLCHAIN_FILE={args.android_ndk}/build/cmake/android.toolchain.cmake"
+    )
 
-subprocess.run(["cmake", *generate_cmd_args])
+    subprocess.run(["cmake", *generate_cmd_args])
 subprocess.run(["cmake", "--build", args.build_dir])
 
 ############################################
