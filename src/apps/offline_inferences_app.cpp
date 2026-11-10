@@ -4,6 +4,7 @@
 #include <arduous/utils/json_utils.hpp>
 #include <arduous/utils/npy.hpp>
 #include <arduous/utils/time_utils.hpp>
+#include <arduous/utils/audio_utils.hpp>
 #include <filesystem>
 #include <format>
 #include <magic_enum/magic_enum.hpp>
@@ -94,11 +95,14 @@ void OfflineInferenceApp::save_audio_output(const arduous::ArduousOutputView& ou
         for (auto channel = 0; channel < output.channels; ++channel) {
             fs::path filename = fs::path(_output_audio_path) / std::format("output_channel_{}.wav", channel);
             SoundFileWriter<float, SF_FORMAT_WAV> writer{filename.c_str(), (int)output.sample_rate, 1};
+
+            peak_normalize({output.data + channel_length * channel, channel_length}, 0.5);
             writer.write(output.data + channel_length * channel, channel_length);
         }
     } else {
         fs::path                              filename = fs::path(_output_audio_path) / "output.wav";
         SoundFileWriter<float, SF_FORMAT_WAV> writer{filename.c_str(), (int)output.sample_rate, (int)output.channels};
+        peak_normalize({output.data, output.frames_written}, 0.5);
         writer.write(output.data, output.frames_written);
     }
 }
