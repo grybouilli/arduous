@@ -1,10 +1,10 @@
 #include <arduous/api/arduous_model_io_config.hpp>
 #include <arduous/api/arduous_plugin_api.hpp>
 #include <arduous/apps/offline_inferences_app.hpp>
+#include <arduous/utils/audio_utils.hpp>
 #include <arduous/utils/json_utils.hpp>
 #include <arduous/utils/npy.hpp>
 #include <arduous/utils/time_utils.hpp>
-#include <arduous/utils/audio_utils.hpp>
 #include <filesystem>
 #include <format>
 #include <magic_enum/magic_enum.hpp>
@@ -27,10 +27,12 @@ void OfflineInferenceApp::run() {
 
     // prepare I/O buffers
     std::vector<float> in_buffer(_model_io_config.audio_in.length, 0.f);
+    std::vector<float> model_output(_model_io_config.audio_out.channels * _model_io_config.audio_out.length, 0.f);
     std::vector<float> output(_model_io_config.audio_out.channels * input_audio.frames(), 0.f);
 
     arduous::ArduousInputView  model_in_buffer;
     arduous::ArduousOutputView model_out_buffer;
+    arduous::ArduousOutputView model_out_full;
 
     model_in_buffer.data        = in_buffer.data();
     model_in_buffer.channels    = input_audio.channels();
@@ -38,10 +40,15 @@ void OfflineInferenceApp::run() {
     model_in_buffer.sample_rate = input_audio.sample_rate();
     model_in_buffer.layout      = _model_io_config.audio_in.layout;
 
-    model_out_buffer.data        = output.data();
+    model_out_buffer.data        = model_output.data();
     model_out_buffer.channels    = _model_io_config.audio_out.channels;
     model_out_buffer.sample_rate = _model_io_config.sample_rate;
     model_out_buffer.layout      = _model_io_config.audio_out.layout;
+
+    model_out_full.data        = output.data();
+    model_out_full.channels    = _model_io_config.audio_out.channels;
+    model_out_full.sample_rate = _model_io_config.sample_rate;
+    model_out_full.layout      = _model_io_config.audio_out.layout;
 
     // run inferences
     // mesure latencies
@@ -55,36 +62,32 @@ void OfflineInferenceApp::run() {
         auto beg = tic();
         _model->process(model_in_buffer, model_out_buffer);
         latencies.push_back(toc(beg));
-        postprocess(model_out_buffer, frame_count, output.size());
-        // make the buffer point to the next available frame
-        model_out_buffer.data += model_out_buffer.layout == arduous::ChannelLayout::Planar
-                                     ? model_out_buffer.frames_written / model_out_buffer.channels
-                                     : model_out_buffer.frames_written;
+        postprocess(model_out_buffer, model_out_full, frame_count, output.size());
         frame_count++;
     }
     std::cout << std::format("Treated {} frames of length {}\n", frame_count, _model_io_config.audio_in.length);
     // save audio output(s)
-    model_out_buffer.data           = output.data();  // point back to the beginning
-    model_out_buffer.frames_written = output.size();
-    save_audio_output(model_out_buffer);
+    model_out_full.frames_written = output.size();
+    save_audio_output(model_out_full);
     save_latencies_to_npy(latencies);
     // save latencies
 }
 
-void OfflineInferenceApp::postprocess(arduous::ArduousOutputView& output,
+void OfflineInferenceApp::postprocess(arduous::ArduousOutputView& new_output,
+                                      arduous::ArduousOutputView& full_output,
                                       const size_t                current_frame_idx,
                                       const size_t                expected_final_output_size) {
     // if the output layout is planar, we move the channels to their corresponding location:
     // [chan0_buf0, chan1_buf0, ..., chanm_buf0, chan0_buf1, ..., chanm_bufn] -> [chan0_buf0, chan0_buf1, ...,
     // chan0_bufn, chan1_buf0, ..., chanm_bufn]
-    if (output.layout == arduous::ChannelLayout::Planar) {
-        const size_t channel_size = output.frames_written / output.channels;
-        const size_t expected_final_channel_size = expected_final_output_size / output.channels;
+    if (new_output.layout == arduous::ChannelLayout::Planar) {
+        const size_t channel_size                = new_output.frames_written / new_output.channels;
+        const size_t expected_final_channel_size = expected_final_output_size / new_output.channels;
 
-        for (auto channel = 1; channel < output.channels; ++channel) {
-            std::memcpy(output.data + channel * expected_final_channel_size,
-                        output.data + channel * channel_size,
-                        channel_size*sizeof(float));
+        for (auto channel = 0; channel < new_output.channels; ++channel) {
+            std::memcpy(full_output.data + channel * expected_final_channel_size + current_frame_idx * channel_size,
+                        new_output.data + channel * channel_size,
+                        channel_size * sizeof(float));
         }
     }
 }
