@@ -1,0 +1,6 @@
+{
+    "model_filename" : "models/convtasnet/streamable_0.5_bn.onnx",
+    "ep_name" : "QNN",
+    "ep_config" : "models/convtasnet/configs/streamable_cvt_ep_config.json",
+    "session_config" : "models/convtasnet/configs/streamable_cvt_session_config.json"
+}

@@ -1,0 +1,13 @@
+{
+    "audio_in": {
+        "channels": 1,
+        "length": 16000,
+        "layout": "Planar"
+    },
+    "audio_out": {
+        "channels": 2,
+        "length": 16000,
+        "layout": "Planar"
+    },
+    "sample_rate": 8000
+}

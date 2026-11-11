@@ -1,0 +1,8 @@
+{
+    "model_filename" : "models/convtasnet/offline/ctx_model_0.5_gln_full_precision.onnx",
+    "ep_name" : "QNN",
+    "ep_config" : "models/convtasnet/offline/configs/offline_cvt_ep_config.json",
+    "session_config" : "models/convtasnet/offline/configs/offline_cvt_session_config.json",
+    "model_type" : "Convtasnet",
+    "model_config" : "models/convtasnet/offline/configs/offline_convtasnet_io.json"
+}
