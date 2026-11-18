@@ -54,11 +54,30 @@ void OfflineInferenceApp::run() {
     // mesure latencies
     std::vector<int64_t> latencies;
     int                  frame_count = 0;
-    while ((model_in_buffer.frames = input_audio.read(in_buffer.data(), _model_io_config.audio_in.length)) > 0) {
-        if (model_in_buffer.frames < _model_io_config.audio_in.length) {
-            std::fill(in_buffer.begin() + model_in_buffer.frames, in_buffer.end(), 0.0f);
-            model_in_buffer.frames = _model_io_config.audio_in.length;
+    const size_t         target_frames = _model_io_config.audio_in.length;
+
+    while (true) {
+        // Keep reading until we have a full buffer or hit EOF
+        size_t filled = 0;
+        while (filled < target_frames) {
+            auto n = input_audio.read(in_buffer.data() + filled, target_frames - filled);
+            if (n <= 0) {
+                break;  // EOF (or error)
+            }
+            filled += static_cast<size_t>(n);
         }
+
+        if (filled == 0) {
+            break;
+        }
+
+        if (filled < target_frames) {
+            std::cout << "Padded last buffer because only " << filled << " frames were left (instead of "
+                      << target_frames << ")" << std::endl;
+            std::fill(in_buffer.begin() + filled, in_buffer.end(), 0.0f);
+        }
+        model_in_buffer.frames = target_frames;
+
         auto beg = tic();
         _model->process(model_in_buffer, model_out_buffer);
         latencies.push_back(toc(beg));
