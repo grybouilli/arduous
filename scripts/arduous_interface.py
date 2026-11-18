@@ -39,7 +39,16 @@ class ArduousInterface:
 
     def _adb_shell(self, *args: str) -> subprocess.CompletedProcess:
         """Run a command on the device, quoting each argument safely."""
-        return self._adb("shell", shlex.join(args))
+        return self._adb("shell", *args)
+
+    def path_exists(self, path: str) -> bool:
+        """Return True if `path` exists on the device (file, directory, or anything else)."""
+        result = subprocess.run(
+            ["adb", "shell", f"test -e {shlex.quote(os.path.join(self.root, path))}"],
+            capture_output=True,
+            text=True,
+        )
+        return result.returncode == 0
 
     def _make_path_absolute(self, path: str) -> str:
         if self.root not in path:
@@ -47,7 +56,7 @@ class ArduousInterface:
         return path
 
     def run_offline_inferences(
-        self, config_path: str, model_path: str | None = None
+        self, config_path: str, model_path: str | None = None, ep_config_path : str | None = None
     ) -> None:
         # adb shell offline_inferences -a config_path -i path_to_input_filename -o path_to_output
         config_path = self._make_path_absolute(config_path)
@@ -55,6 +64,8 @@ class ArduousInterface:
         cmd = [self.offline_inferences, "-a", config_path]
         if model_path is not None:
             cmd += ["-m", model_path]
+        if ep_config_path is not None:
+            cmd += ["-c", ep_config_path]
         cmd += ["-i", self.path_to_input_filename, "-o", self.path_to_output]
 
         self._adb_shell("mkdir", "-p", self.path_to_output)
@@ -78,7 +89,7 @@ class ArduousInterface:
 
     def _read_device_json(self, device_path: str) -> dict:
         """Read and parse a JSON file that lives on the device."""
-        result = self._adb_shell("cat", device_path)
+        result = self._adb("shell", "cat", os.path.join(self.root, device_path))
         return json.loads(result.stdout)
 
     @staticmethod
@@ -92,25 +103,31 @@ class ArduousInterface:
         config_path: str,
         model_path: str | None = None,
         output_path: str | None = None,
+        ep_config_path : str | None = None
     ) -> str:
         # adb shell get_embedded_ctx -a config_path -o output_path
         if output_path is None:
-            config = self._read_device_json(config_path)
-            try:
-                model_filename = config["model_filename"]
-            except KeyError:
-                raise KeyError(
-                    f"'model_filename' not found in {config_path} on the device; "
-                    "pass output_path explicitly"
-                ) from None
-            output_path = self._ctx_path_for(model_filename)
+            if model_path is not None:
+                output_path = self._ctx_path_for(model_path)
+            else:
+                config = self._read_device_json(config_path)
+                try:
+                    model_filename = config["model_filename"]
+                except KeyError:
+                    raise KeyError(
+                        f"'model_filename' not found in {config_path} on the device; "
+                        "pass output_path explicitly"
+                    ) from None
+                output_path = self._ctx_path_for(model_filename)
 
         cmd = [self.get_embedded_ctx, "-a", config_path]
         if model_path is not None:
             cmd += ["-m", model_path]
+        if ep_config_path is not None:
+            cmd += ["-c", ep_config_path]
         cmd += ["-o", output_path]
 
-        self._adb_shell("mkdir", "-p", posixpath.dirname(output_path))
+        self._adb_shell("mkdir", "-p", os.path.join(self.root, posixpath.dirname(output_path)))
         self._adb_shell_env(*cmd)
         return output_path
 

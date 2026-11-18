@@ -59,12 +59,15 @@ arduous = ArduousInterface(f"/data/local/tmp/{args.arduous_home}")
 path_to_qairt = os.path.join(args.build_dir, "import", "qairt")
 pattern = re.compile(r"^(\d+\.\d+)\.\d+\.\d+$")
 
-qairt_version, qairt_folder = next(
-    (float(m.group(1)), os.path.join(path_to_qairt, folder))
-    for folder in os.listdir(path_to_qairt)
-    if os.path.isdir(os.path.join(path_to_qairt, folder))
-    if (m := pattern.match(folder))
-)
+qairt_version=2.52
+qairt_folder=None
+if args.qnn:
+    qairt_version, qairt_folder = next(
+        (float(m.group(1)), os.path.join(path_to_qairt, folder))
+        for folder in os.listdir(path_to_qairt)
+        if os.path.isdir(os.path.join(path_to_qairt, folder))
+        if (m := pattern.match(folder))
+    )
 arduous.create_home(qairt_version=qairt_version)
 
 ############################################
@@ -106,40 +109,42 @@ path_to_libonnxruntime = os.path.join(
 )
 push_if_needed(path_to_libonnxruntime, f"{arduous.root}/lib", args.force)
 
-# Push only necessary libraries from qairt
-qnn_deps = [
-    "libGenie.so",
-    "libQnnHtpPrepare.so",
-    "libQnnGpu.so",
-    "libQnnHtp.so",
-    "libQnnHtpNetRunExtensions.so",
-    "libQnnHtpV68Stub.so",
-    "libQnnHtpV69Stub.so",
-    "libQnnHtpV73Stub.so",
-    "libQnnHtpV75Stub.so",
-    "libQnnHtpV79Stub.so",
-    "libQnnHtpV81Stub.so",
-    "libQnnIr.so",
-    "libQnnSaver.so",
-    "libQnnSystem.so",
-]  # (removed the duplicated libQnnHtpPrepare.so entry)
+if qairt_folder is not None:
+    # Push only necessary libraries from qairt
+    qnn_deps = [
+        "libGenie.so",
+        "libQnnHtpPrepare.so",
+        "libQnnCpu.so",
+        "libQnnGpu.so",
+        "libQnnHtp.so",
+        "libQnnHtpNetRunExtensions.so",
+        "libQnnHtpV68Stub.so",
+        "libQnnHtpV69Stub.so",
+        "libQnnHtpV73Stub.so",
+        "libQnnHtpV75Stub.so",
+        "libQnnHtpV79Stub.so",
+        "libQnnHtpV81Stub.so",
+        "libQnnIr.so",
+        "libQnnSaver.so",
+        "libQnnSystem.so",
+    ]  # (removed the duplicated libQnnHtpPrepare.so entry)
 
-hexagon_dep = "libQnnHtpV", "Skel.so"
-path_to_hexagon = os.path.join(qairt_folder, "lib", "hexagon-v")
-path_to_qnn = os.path.join(qairt_folder, "lib", "aarch64-android")
-qairt_remote_dir = f"{arduous.root}/lib/qairt{qairt_version}"
+    hexagon_dep = "libQnnHtpV", "Skel.so"
+    path_to_hexagon = os.path.join(qairt_folder, "lib", "hexagon-v")
+    path_to_qnn = os.path.join(qairt_folder, "lib", "aarch64-android")
+    qairt_remote_dir = f"{arduous.root}/lib/qairt{qairt_version}"
 
-for dep in qnn_deps:
-    push_if_needed(f"{path_to_qnn}/{dep}", qairt_remote_dir, args.force)
+    for dep in qnn_deps:
+        push_if_needed(f"{path_to_qnn}/{dep}", qairt_remote_dir, args.force)
 
-for version in range(68, 86):
-    current_path_to_hexagon = os.path.join(f"{path_to_hexagon}{version}", "unsigned")
-    if os.path.exists(current_path_to_hexagon):
-        push_if_needed(
-            f"{current_path_to_hexagon}/{hexagon_dep[0]}{version}{hexagon_dep[1]}",
-            qairt_remote_dir,
-            args.force,
-        )
+    for version in range(68, 86):
+        current_path_to_hexagon = os.path.join(f"{path_to_hexagon}{version}", "unsigned")
+        if os.path.exists(current_path_to_hexagon):
+            push_if_needed(
+                f"{current_path_to_hexagon}/{hexagon_dep[0]}{version}{hexagon_dep[1]}",
+                qairt_remote_dir,
+                args.force,
+            )
 
 
 ############################################

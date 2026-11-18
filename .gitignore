@@ -2,4 +2,7 @@
 build
 qnn_build
 __pycache__
-scripts/output
+scripts/benchmark_outputs
+scripts/benchmark_configs/archive
+scripts/archive_outputs
+tmp

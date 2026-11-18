@@ -1,3 +1,0 @@
-{
-    "models/convtasnet/ctx_streamable_0.5_bn.onnx" : "models/convtasnet/configs/streamable_convtasnet_config.json"
-}

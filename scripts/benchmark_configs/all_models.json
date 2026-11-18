@@ -1,0 +1,32 @@
+{
+    "model_A_bn_0.5" : {
+        "model_path": "models/convtasnet/paper/streamable/streamable_A_bn_0.5.onnx",
+        "ctx_path": "models/convtasnet/paper/streamable/ctx_streamable_A_bn_0.5.onnx",
+        "ctx_config": "models/convtasnet/paper/streamable/config/get_ctx_streamable_convtasnet_bn.json",
+        "config": "models/convtasnet/paper/streamable/config/streamable_convtasnet_config.json",
+        "fetch_loc": "benchmark_outputs",
+        "accelerators": ["cpu", "htp"]
+    },
+    "model_B_bn_0.5": {
+        "model_path": "models/convtasnet/paper/streamable/streamable_B_bn_0.5.onnx",
+        "ctx_path": "models/convtasnet/paper/streamable/ctx_streamable_B_bn_0.5.onnx",
+        "ctx_config": "models/convtasnet/paper/streamable/config/get_ctx_streamable_convtasnet_bn.json",
+        "config": "models/convtasnet/paper/streamable/config/streamable_convtasnet_config.json",
+        "fetch_loc": "benchmark_outputs",
+        "accelerators": [
+            "cpu",
+            "htp"
+        ]
+    },
+    "model_A_gln_0.5": {
+        "model_path": "models/convtasnet/paper/offline/offline_B_bn_0.5.onnx",
+        "ctx_path": "models/convtasnet/paper/offline/ctx_offline_B_bn_0.5.onnx",
+        "ctx_config": "models/convtasnet/paper/offline/config/get_ctx_offline_convtasnet_bn.json",
+        "config": "models/convtasnet/paper/offline/config/offline_convtasnet_config.json",
+        "fetch_loc": "benchmark_outputs",
+        "accelerators": [
+            "cpu",
+            "htp"
+        ]
+    }
+}
