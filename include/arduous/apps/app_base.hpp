@@ -25,7 +25,7 @@ class AppBase {
     virtual ~AppBase() {}
 
     static auto get_options() {
-        cxxopts::Options options{"arduous_offline", "Offline inferences arduous app"};
+        cxxopts::Options options{"arduous_offline", "Arduous app"};
         auto             adder = options.add_options();
         adder("h,help", "Print usage");
         adder(MODEL_FILENAME_KEY_FULL,

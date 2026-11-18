@@ -12,10 +12,13 @@ class StreamableCLNConvtasnet : public ModelBaseWithCPUMemory {
         ModelBaseWithCPUMemory(session, io_config),
         _input{_memory_info, {1, io_config.audio_in.length}},
         _output{_memory_info, {1, io_config.audio_out.channels, io_config.audio_out.length}},
-        _input_head_buffer{_memory_info, {1, 1, 32}},
-        _tcn_states{_memory_info, {1, 512, 180}},
-        _cln_states{_memory_info, {1, 147}},
-        _tail_buffer{_memory_info, {1, 2, 32}} {}
+        _input_head_buffer{_memory_info, {1, 1, (int64_t)OrtSessionHandler::get_input_shape(session, 1, 2)}},
+        _tcn_states{_memory_info,
+                    {1,
+                     (int64_t)OrtSessionHandler::get_input_shape(session, 2, 1),
+                     (int64_t)OrtSessionHandler::get_input_shape(session, 2, 2)}},
+        _cln_states{_memory_info, {1, (int64_t)OrtSessionHandler::get_input_shape(session, 3, 2)}},
+        _tail_buffer{_memory_info, {1, 2, (int64_t)OrtSessionHandler::get_input_shape(session, 4, 2)}} {}
 
    protected:
     int do_process(const ArduousInputView& input, ArduousOutputView& output) final {
